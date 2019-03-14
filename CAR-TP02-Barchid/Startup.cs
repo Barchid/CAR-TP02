@@ -57,6 +57,7 @@ namespace CAR_TP02_Barchid
 
             app.UseFtpCredentials();
 
+            app.UseMiddleware<ErrorHandlingMiddleware>();
             app.UseMvc();
         }
     }

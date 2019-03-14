@@ -1,6 +1,11 @@
 ﻿using FluentFTP;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.IO;
 using System.Net;
 using WebApi.Tools;
 
@@ -15,12 +20,14 @@ namespace WebApi.Ftp
 
         private readonly int _port = 21;
         private readonly string _host;
+        private readonly IHostingEnvironment _enviroment;
 
-        public Client(FtpContext ftpContext, IConfiguration configuration)
+        public Client(FtpContext ftpContext, IConfiguration configuration, IHostingEnvironment environment)
         {
             _ftpContext = ftpContext;
             _port = int.Parse(configuration["Port"]);
             _host = configuration["Host"];
+            _enviroment = environment;
         }
 
         public bool AddDirectory(string remotePath)
@@ -56,9 +63,18 @@ namespace WebApi.Ftp
             return true;
         }
 
-        public string ListDirectory(string remotePath)
+        public IEnumerable<FtpListItem> ListDirectory(string remotePath)
         {
-            throw new System.NotImplementedException();
+            FtpClient ftpClient = ConnectToFtp();
+            IEnumerable<FtpListItem> listing = null;
+
+            if (ftpClient.DirectoryExists(remotePath))
+            {
+                listing = ftpClient.GetListing(remotePath);
+            }
+
+            ftpClient.Disconnect();
+            return listing;
         }
 
         public bool RemoveDirectory(string remotePath)
@@ -73,7 +89,7 @@ namespace WebApi.Ftp
 
             ftpClient.DeleteDirectory(remotePath);
 
-            bool isDeleted = ftpClient.DirectoryExists(remotePath);
+            bool isDeleted = !ftpClient.DirectoryExists(remotePath);
             ftpClient.Disconnect();
             return isDeleted;
         }
@@ -96,11 +112,58 @@ namespace WebApi.Ftp
             return isMoved;
         }
 
-        public bool UploadFile(string remotePath, string pathToUpload)
+        public bool UploadFile(string remotePath, IFormFile file)
         {
             FtpClient ftpClient = ConnectToFtp();
+
+            if (ftpClient.FileExists(remotePath))
+            {
+                ftpClient.Disconnect();
+                return false;
+            }
+
+            string tmpPath = Path.Combine(_enviroment.WebRootPath, Guid.NewGuid().ToString());
+
+            using (var stream = new FileStream(tmpPath, FileMode.Create))
+            {
+                file.CopyTo(stream);
+            }
+            bool result = ftpClient.UploadFile(tmpPath, remotePath, FtpExists.Overwrite, true);
+
+            File.Delete(tmpPath);
+
             ftpClient.Disconnect();
-            return true;
+            return result;
+        }
+
+        public MemoryStream DownloadFile(string remotePath)
+        {
+            FtpClient ftpClient = ConnectToFtp();
+            if (!ftpClient.FileExists(remotePath))
+            {
+                ftpClient.Disconnect();
+                return null;
+            }
+
+            string tmpPath = Path.Combine(_enviroment.WebRootPath, Guid.NewGuid().ToString());
+            bool isDownloadSuccessful = ftpClient.DownloadFile(tmpPath, remotePath);
+            MemoryStream memory = null;
+            if (isDownloadSuccessful)
+            {
+                memory = new MemoryStream();
+                using (FileStream stream = new FileStream(tmpPath, FileMode.Open))
+                {
+                    stream.CopyTo(memory);
+                }
+                memory.Position = 0;
+
+                File.Delete(tmpPath);
+            }
+
+
+
+            ftpClient.Disconnect();
+            return memory;
         }
 
         private FtpClient ConnectToFtp()
@@ -110,9 +173,14 @@ namespace WebApi.Ftp
             return ftpClient;
         }
 
-        public bool DownloadFile(string remotePath, string pathToUpload)
+        public bool UploadDirectory(string remotePath, IFormFile directory)
         {
-            throw new System.NotImplementedException();
+            throw new NotImplementedException();
+        }
+
+        public string DownloadDirectory(string remotePath)
+        {
+            throw new NotImplementedException();
         }
     }
 }

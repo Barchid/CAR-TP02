@@ -7,14 +7,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Tools\Extensions\JwtAuthenticationBuilderExtension.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Compile Include="Tools\Extensions\FtpCredentialExtension.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
     <Folder Include="wwwroot\" />
   </ItemGroup>
 

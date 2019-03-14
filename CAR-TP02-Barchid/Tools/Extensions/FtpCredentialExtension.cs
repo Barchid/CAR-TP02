@@ -7,10 +7,9 @@ using System.Threading.Tasks;
 
 namespace WebApi.Tools.Extensions
 {
-    public class FtpCredentialsOption {
-
+    public class FtpCredentialsOption
+    {
     }
-
 
     public class FtpCredentials
     {
@@ -27,7 +26,7 @@ namespace WebApi.Tools.Extensions
         {
             FtpContext ftpContext = context.RequestServices.GetService<FtpContext>();
 
-            string userInput = context.Request.Headers["USER"].ToString() ?? "anonymous" ;
+            string userInput = context.Request.Headers["USER"].ToString() ?? "anonymous";
             string passInput = context.Request.Headers["PASS"].ToString() ?? "anonymous";
 
             ftpContext.User = userInput;

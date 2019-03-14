@@ -1,4 +1,9 @@
-﻿namespace WebApi.Ftp
+﻿using FluentFTP;
+using Microsoft.AspNetCore.Http;
+using System.Collections.Generic;
+using System.IO;
+
+namespace WebApi.Ftp
 {
     /// <summary>
     /// Interface that will encapsulate the 
@@ -24,17 +29,16 @@
         /// Uploads a file to the remote FTP server
         /// </summary>
         /// <param name="remotePath">The path in the remote FTP server where the file will be uploaded.</param>
-        /// <param name="pathToUpload">The path of the file to </param>
+        /// <param name="file">The file to upload</param>
         /// <returns></returns>
-        bool UploadFile(string remotePath, string pathToUpload);
+        bool UploadFile(string remotePath, IFormFile file);
 
         /// <summary>
         /// Downloads a file from the remote FTP server
         /// </summary>
         /// <param name="remotePath">The path in the remote FTP server of the file that will be uploaded.</param>
-        /// <param name="pathToUpload">The path of the local downloaded file.</param>
-        /// <returns>true if the download operation succeeded or else false.</returns>
-        bool DownloadFile(string remotePath, string pathToUpload);
+        /// <returns>The memory stream of the file that has been downloaded or null if the file does not exist</returns>
+        MemoryStream DownloadFile(string remotePath);
 
         /// <summary>
         /// Adds a directory to the remote server.
@@ -55,6 +59,21 @@
         /// </summary>
         /// <param name="remotePath">the path of the directory to list.</param>
         /// <returns>the list of the specified directory</returns>
-        string ListDirectory(string remotePath);
+        IEnumerable<FtpListItem> ListDirectory(string remotePath);
+
+        /// <summary>
+        /// Uploads the specified directory to the remote path in the FTP server
+        /// </summary>
+        /// <param name="remotePath">The path of the directory that will be uploaded</param>
+        /// <param name="directory">The directory to upload</param>
+        /// <returns>true if the directory has been uploaded successfully or else false</returns>
+        bool UploadDirectory(string remotePath, IFormFile directory);
+
+        /// <summary>
+        /// Downloads the directory specified by the remote path in parameter in the FTP server.
+        /// </summary>
+        /// <param name="remotePath">The path of the directory to download on the FTP server.</param>
+        /// <returns>the path of the directory where the files are located</returns>
+        string DownloadDirectory(string remotePath);
     }
 }
