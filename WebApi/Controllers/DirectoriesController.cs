@@ -1,14 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using WebApi.Ftp;
-using System.Collections;
 using FluentFTP;
 using WebApi.Model;
-using System.IO.Compression;
 using System.IO;
 
 namespace WebApi.Controllers
@@ -131,14 +126,19 @@ namespace WebApi.Controllers
         [ProducesResponseType(typeof(string), 500)]
         public IActionResult Move([FromBody] MoveInput move)
         {
+            if (move == null)
+            {
+                return BadRequest("The move input cannot be null.");
+            }
+
             bool result = _client.Move(move.OldPath, move.TargetPath);
             if (result)
             {
-                return Ok($"Directory moved from path ${move.OldPath} to path ${move.TargetPath}.");
+                return Ok($"Directory moved from path {move.OldPath} to path {move.TargetPath}.");
             }
             else
             {
-                return BadRequest($"Directory could not be moved from path ${move.OldPath} to path ${move.TargetPath}");
+                return BadRequest($"Directory could not be moved from path {move.OldPath} to path {move.TargetPath}");
             }
         }
 
@@ -182,13 +182,13 @@ namespace WebApi.Controllers
         [ProducesResponseType(typeof(string), 500)]
         public IActionResult Upload([FromQuery] string path, IFormFile archive)
         {
-            if(string.IsNullOrWhiteSpace(path) || archive == null)
+            if (string.IsNullOrWhiteSpace(path) || archive == null)
             {
                 return BadRequest("path & archive required.");
             }
 
             IEnumerable<FtpListItem> uploaded = _client.UploadDirectory(path, archive);
-            if(uploaded == null)
+            if (uploaded == null)
             {
                 return BadRequest("The archive cannot be uploaded in the specified path.");
             }

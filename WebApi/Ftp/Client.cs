@@ -180,7 +180,7 @@ namespace WebApi.Ftp
         public IEnumerable<FtpListItem> UploadDirectory(string remotePath, IFormFile archive)
         {
             FtpClient ftpClient = ConnectToFtp();
-            if(ftpClient.DirectoryExists(remotePath))
+            if (ftpClient.DirectoryExists(remotePath))
             {
                 ftpClient.Disconnect();
                 return null;
@@ -206,13 +206,13 @@ namespace WebApi.Ftp
 
         private void UploadTree(string parentRemotePath, DirectoryInfo parent, FtpClient ftpClient)
         {
-            foreach(FileInfo file in parent.EnumerateFiles())
+            foreach (FileInfo file in parent.EnumerateFiles())
             {
                 string remotePath = $"{parentRemotePath}/{file.Name}";
                 ftpClient.UploadFile(file.FullName, remotePath, FtpExists.Overwrite, true);
             }
 
-            foreach(DirectoryInfo directory in parent.EnumerateDirectories())
+            foreach (DirectoryInfo directory in parent.EnumerateDirectories())
             {
                 string remotePath = $"{parentRemotePath}/{directory.Name}";
                 ftpClient.CreateDirectory(remotePath);

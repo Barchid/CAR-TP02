@@ -6,6 +6,9 @@ MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WebApi", "WebApi\WebApi.csproj", "{EADEDDED-1226-40E6-BB67-B1C75292924B}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tests", "Tests\Tests.csproj", "{8BAEFC6B-D73A-4315-A100-6DBA139D6162}"
+	ProjectSection(ProjectDependencies) = postProject
+		{EADEDDED-1226-40E6-BB67-B1C75292924B} = {EADEDDED-1226-40E6-BB67-B1C75292924B}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

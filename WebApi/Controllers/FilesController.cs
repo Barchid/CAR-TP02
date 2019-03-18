@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using WebApi.Ftp;
 using System.IO;
 using Microsoft.AspNetCore.StaticFiles;
@@ -31,7 +30,7 @@ namespace WebApi.Controllers
         /// <response code="500">Internal server error</response>
         /// <response code="400">When the request is not valid.</response>
         [HttpGet("download")]
-        [ProducesResponseType(typeof(File), 200)]
+        [ProducesResponseType(typeof(FileStreamResult), 200)]
         [ProducesResponseType(typeof(string), 400)]
         [ProducesResponseType(typeof(string), 500)]
         public IActionResult Download([FromQuery] string path)
@@ -127,14 +126,19 @@ namespace WebApi.Controllers
         [ProducesResponseType(typeof(string), 500)]
         public IActionResult Move([FromBody] MoveInput move)
         {
+            if (move == null)
+            {
+                return BadRequest("Body cannot be null.");
+            }
+
             bool result = _client.Move(move.OldPath, move.TargetPath);
             if (result)
             {
-                return Ok($"File moved from path ${move.OldPath} to path ${move.TargetPath}.");
+                return Ok($"File moved from path {move.OldPath} to path {move.TargetPath}.");
             }
             else
             {
-                return BadRequest($"File could not be moved from path ${move.OldPath} to path ${move.TargetPath}");
+                return BadRequest($"File could not be moved from path {move.OldPath} to path {move.TargetPath}");
             }
         }
 
