@@ -25,7 +25,7 @@ Le SDK .NET Core est la version Open Source et cross-platform de l'ancien framew
 Ce SDK est requis pour pouvoir compiler et lancer le projet. Pour l'installer, il suffit de suivre le guide officiel d'installation afin d'obtenir `dotnet`, l'interface en ligne de commande. Lien à suivre : https://dotnet.microsoft.com/download?initial-os=linux.
 
 ### Lancement des tests
-À la racine du projet, lancer la commande `dotnet test` afin de visualiser les tests réalisés.
+À la racine du projet, lancer la commande `dotnet test ./Tests/Tests.csproj` afin de visualiser les tests réalisés.
 
 ### Exécution
 Pour construire un build de déploiement du programme, utiliser la commande `dotnet publish` à la racine du projet.
