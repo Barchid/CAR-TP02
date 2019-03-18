@@ -6,7 +6,7 @@ using System.IO;
 namespace WebApi.Ftp
 {
     /// <summary>
-    /// Interface that will encapsulate the 
+    /// Interface that defines the interaction between an FTP server and the local application.
     /// </summary>
     public interface IClient
     {
@@ -65,15 +65,15 @@ namespace WebApi.Ftp
         /// Uploads the specified directory to the remote path in the FTP server
         /// </summary>
         /// <param name="remotePath">The path of the directory that will be uploaded</param>
-        /// <param name="directory">The directory to upload</param>
-        /// <returns>true if the directory has been uploaded successfully or else false</returns>
-        bool UploadDirectory(string remotePath, IFormFile directory);
+        /// <param name="archive">The directory to upload</param>
+        /// <returns>The listing of the uploaded directory or else null if the upload operation is not possible</returns>
+        IEnumerable<FtpListItem> UploadDirectory(string remotePath, IFormFile archive);
 
         /// <summary>
         /// Downloads the directory specified by the remote path in parameter in the FTP server.
         /// </summary>
         /// <param name="remotePath">The path of the directory to download on the FTP server.</param>
         /// <returns>the path of the directory where the files are located</returns>
-        string DownloadDirectory(string remotePath);
+        MemoryStream DownloadDirectory(string remotePath);
     }
 }

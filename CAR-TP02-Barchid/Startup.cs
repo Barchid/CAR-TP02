@@ -4,12 +4,17 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Swashbuckle.AspNetCore.Swagger;
 using System;
+using System.IO;
+using System.Reflection;
 using WebApi.Ftp;
 using WebApi.Tools;
 using WebApi.Tools.Extensions;
 
 namespace CAR_TP02_Barchid
 {
+    /// <summary>
+    /// Class used at the start of the program to define how the service will be running and with which configuration.
+    /// </summary>
     public class Startup
     {
         public Startup(IConfiguration configuration)
@@ -40,6 +45,11 @@ namespace CAR_TP02_Barchid
 
                 context.OperationFilter<UserHeaderFilter>();
                 context.OperationFilter<PassHeaderFilter>();
+
+                // Set the comments path for the Swagger JSON and UI.
+                var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+                var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+                context.IncludeXmlComments(xmlPath);
             });
         }
 

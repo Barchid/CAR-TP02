@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
@@ -10,6 +11,9 @@ using WebApi.Exceptions;
 
 namespace WebApi.Tools
 {
+    /// <summary>
+    /// Middleware used to catch thrown exceptions and generate an error response (400+ code) that will be send to the client.
+    /// </summary>
     public class ErrorHandlingMiddleware
     {
         private readonly RequestDelegate next;
@@ -35,7 +39,9 @@ namespace WebApi.Tools
         {
             HttpStatusCode code = HttpStatusCode.InternalServerError; // 500 if unexpected
 
-            bool isBadRequest = exception is FtpCommandException || exception is ArgumentOutOfRangeException || exception is FtpException;
+            bool isBadRequest = exception is FtpCommandException || exception is ArgumentOutOfRangeException ||
+                exception is FtpException || exception is InvalidDataException;
+
             if (isBadRequest)
             {
                 code = HttpStatusCode.BadRequest;

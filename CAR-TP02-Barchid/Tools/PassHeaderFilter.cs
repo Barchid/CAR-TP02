@@ -7,6 +7,9 @@ using Swashbuckle.AspNetCore.Swagger;
 
 namespace WebApi.Tools
 {
+    /// <summary>
+    /// General filter UI in the SWAGGER documentation.
+    /// </summary>
     public class PassHeaderFilter : IOperationFilter
     {
         public void Apply(Operation operation, OperationFilterContext context)

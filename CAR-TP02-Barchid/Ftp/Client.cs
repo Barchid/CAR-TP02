@@ -3,9 +3,9 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Net;
 using WebApi.Tools;
 
@@ -166,6 +166,10 @@ namespace WebApi.Ftp
             return memory;
         }
 
+        /// <summary>
+        /// Connects to the FTP server by using the user and password placed in the FTP context.
+        /// </summary>
+        /// <returns>the ftp client that is connected to the FTP server</returns>
         private FtpClient ConnectToFtp()
         {
             FtpClient ftpClient = new FtpClient(_host, _port, new NetworkCredential(_ftpContext.User, _ftpContext.Pass));
@@ -173,14 +177,114 @@ namespace WebApi.Ftp
             return ftpClient;
         }
 
-        public bool UploadDirectory(string remotePath, IFormFile directory)
+        public IEnumerable<FtpListItem> UploadDirectory(string remotePath, IFormFile archive)
         {
-            throw new NotImplementedException();
+            FtpClient ftpClient = ConnectToFtp();
+            if(ftpClient.DirectoryExists(remotePath))
+            {
+                ftpClient.Disconnect();
+                return null;
+            }
+
+            string tmpPath = Path.Combine(_enviroment.WebRootPath, Guid.NewGuid().ToString());
+
+            using (var stream = new FileStream(tmpPath, FileMode.Create))
+            {
+                archive.CopyTo(stream);
+            }
+
+            ZipFile.ExtractToDirectory(tmpPath, $"{tmpPath}directory");
+            File.Delete(tmpPath);
+            DirectoryInfo directoryInfo = new DirectoryInfo($"{tmpPath}directory");
+            UploadTree(remotePath, directoryInfo, ftpClient);
+
+            IEnumerable<FtpListItem> result = ftpClient.GetListing(remotePath);
+            ftpClient.Disconnect();
+            Directory.Delete($"{tmpPath}directory", true);
+            return result;
         }
 
-        public string DownloadDirectory(string remotePath)
+        private void UploadTree(string parentRemotePath, DirectoryInfo parent, FtpClient ftpClient)
         {
-            throw new NotImplementedException();
+            foreach(FileInfo file in parent.EnumerateFiles())
+            {
+                string remotePath = $"{parentRemotePath}/{file.Name}";
+                ftpClient.UploadFile(file.FullName, remotePath, FtpExists.Overwrite, true);
+            }
+
+            foreach(DirectoryInfo directory in parent.EnumerateDirectories())
+            {
+                string remotePath = $"{parentRemotePath}/{directory.Name}";
+                ftpClient.CreateDirectory(remotePath);
+                UploadTree(remotePath, directory, ftpClient);
+            }
+        }
+
+        public MemoryStream DownloadDirectory(string remotePath)
+        {
+            FtpClient ftpClient = ConnectToFtp();
+            if (!ftpClient.DirectoryExists(remotePath))
+            {
+                ftpClient.Disconnect();
+                return null;
+            }
+            string directoryName = Path.Combine(_enviroment.WebRootPath, GetFileName(remotePath));
+            Directory.CreateDirectory(directoryName);
+            DownloadTree(ftpClient, remotePath, directoryName);
+
+            string zipPath = $"{directoryName}.zip";
+            ZipFile.CreateFromDirectory(directoryName, zipPath);
+
+            Directory.Delete(directoryName, true);
+
+            MemoryStream memory = new MemoryStream();
+            using (FileStream stream = new FileStream(zipPath, FileMode.Open))
+            {
+                stream.CopyTo(memory);
+            }
+            memory.Position = 0;
+            File.Delete(zipPath);
+
+            ftpClient.Disconnect();
+            return memory;
+        }
+
+        /// <summary>
+        /// Downloads the file tree in the directory of remote FTP server specified by path.
+        /// The tree will be added in a local directory specified in the parent path
+        /// </summary>
+        /// <param name="ftpClient">The client used to communicate with the FTP server</param>
+        /// <param name="path">The path of the remote FTP directory</param>
+        /// <param name="parent">The parent directory where the tree will be downloaded.</param>
+        private void DownloadTree(FtpClient ftpClient, string path, string parent)
+        {
+            IEnumerable<FtpListItem> items = ftpClient.GetListing(path);
+            foreach (FtpListItem item in items)
+            {
+                if (item.Type == FtpFileSystemObjectType.Directory)
+                {
+                    string directoryName = Path.Combine(parent, item.Name);
+                    Directory.CreateDirectory(directoryName);
+                    DownloadTree(ftpClient, item.FullName, directoryName);
+                }
+                else
+                {
+                    string fileName = Path.Combine(parent, item.Name);
+                    ftpClient.DownloadFile(fileName, item.FullName, FtpLocalExists.Overwrite);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Gets the filename of a path that will be sent to the FTP server.
+        /// </summary>
+        /// <param name="path">The path of the FTP server</param>
+        /// <returns>The filename extracted from the path</returns>
+        private string GetFileName(string path)
+        {
+            string[] words = path.Split('/');
+
+            return words[words.Length - 1];
         }
     }
 }

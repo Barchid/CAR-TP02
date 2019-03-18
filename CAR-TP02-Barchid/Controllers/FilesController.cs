@@ -27,7 +27,13 @@ namespace WebApi.Controllers
         /// </summary>
         /// <param name="path">The path of the file to download</param>
         /// <returns>200 with the file when the download is successful.</returns>
+        /// <response code="200">The file required</response>
+        /// <response code="500">Internal server error</response>
+        /// <response code="400">When the request is not valid.</response>
         [HttpGet("download")]
+        [ProducesResponseType(typeof(File), 200)]
+        [ProducesResponseType(typeof(string), 400)]
+        [ProducesResponseType(typeof(string), 500)]
         public IActionResult Download([FromQuery] string path)
         {
             if (string.IsNullOrWhiteSpace(path))
@@ -51,8 +57,14 @@ namespace WebApi.Controllers
         /// </summary>
         /// <param name="path">The path in the FTP server where the file will be uploaded.</param>
         /// <param name="file">The file to upload.</param>
-        /// <returns></returns>
+        /// <returns>The HTTP response</returns>
+        /// <response code="200">Success message</response>
+        /// <response code="500">Internal server error</response>
+        /// <response code="400">When the request is not valid.</response>
         [HttpPost()]
+        [ProducesResponseType(typeof(string), 200)]
+        [ProducesResponseType(typeof(string), 400)]
+        [ProducesResponseType(typeof(string), 500)]
         public IActionResult Upload([FromQuery] string path, IFormFile file)
         {
             if (string.IsNullOrWhiteSpace(path))
@@ -75,8 +87,14 @@ namespace WebApi.Controllers
         /// Removes the file specified by the path from the FTP server
         /// </summary>
         /// <param name="path">the path of the file to remove from the FTP server.</param>
-        /// <returns></returns>
+        /// <returns>HTTP response</returns>
+        /// <response code="200">Success message</response>
+        /// <response code="500">Internal server error</response>
+        /// <response code="400">When the request is not valid.</response>
         [HttpDelete()]
+        [ProducesResponseType(typeof(string), 200)]
+        [ProducesResponseType(typeof(string), 400)]
+        [ProducesResponseType(typeof(string), 500)]
         public IActionResult Remove([FromQuery] string path)
         {
             if (string.IsNullOrWhiteSpace(path))
@@ -99,8 +117,14 @@ namespace WebApi.Controllers
         /// Moves the file specified by the path in query string to another .
         /// </summary>
         /// <param name="move">The new path of the file to move</param>
-        /// <returns>200 if the move operation has been correctly processed or else false.</returns>
+        /// <returns>HTTP response.</returns>
+        /// <response code="200">Success message</response>
+        /// <response code="500">Internal server error</response>
+        /// <response code="400">When the request is not valid.</response>
         [HttpPut]
+        [ProducesResponseType(typeof(string), 200)]
+        [ProducesResponseType(typeof(string), 400)]
+        [ProducesResponseType(typeof(string), 500)]
         public IActionResult Move([FromBody] MoveInput move)
         {
             bool result = _client.Move(move.OldPath, move.TargetPath);

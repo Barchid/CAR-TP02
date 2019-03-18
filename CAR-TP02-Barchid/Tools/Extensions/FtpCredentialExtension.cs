@@ -7,10 +7,16 @@ using System.Threading.Tasks;
 
 namespace WebApi.Tools.Extensions
 {
+    /// <summary>
+    /// Options of the credential
+    /// </summary>
     public class FtpCredentialsOption
     {
     }
 
+    /// <summary>
+    /// Middleware used to retrieve the USER and PASS information for the future FTP requests specified by the client.
+    /// </summary>
     public class FtpCredentials
     {
         private readonly RequestDelegate _next;

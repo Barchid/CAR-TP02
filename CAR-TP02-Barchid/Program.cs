@@ -10,6 +10,9 @@ using Microsoft.Extensions.Logging;
 
 namespace CAR_TP02_Barchid
 {
+    /// <summary>
+    /// Main class that will run the application
+    /// </summary>
     public class Program
     {
         public static void Main(string[] args)
