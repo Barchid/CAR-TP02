@@ -1,3 +1,4 @@
+
 # ﻿Implémentation d’une passerelle REST vers un serveur FTP en ASP.NET Core 2
 BARCHID Sami
 25/02/2019
@@ -5,187 +6,221 @@ BARCHID Sami
 ## Introduction
 Le contenu de ce projet, développé en C# avec le framework ASP.NET Core 2, implémente une API REST permettant à un client REST de communiquer avec un serveur FTP distant.
 
-Les commandes FTP gérées sont :
-- PWD
-- SYST
-- AUTH
-- USER
-- PASS
-- QUIT
-- LIST
-- TYPE
-- PASV
-- PORT
-- PWD
-- CDUP
-- CWD
-- RETR
-- RNFR
-- RNTO
-- DELE
-- RMD
-- MKD
-- STOR
-
-**Attention :** les commandes liées à IPv6 ne sont pas supportées. Veillez donc à communiquer avec le serveur en IPv4.
+La passerelle REST dévelopée permet de réaliser les opérations suivantes :
+- Se connecter à un utilisateur FTP.
+- Lister un dossier.
+- Créer un dossier.
+- Supprimer un dossier.
+- Renommer un dossier.
+- Uploader un dossier (sous forme d'un zip).
+- Télécharger un dossier (sous forme d'un zip).
+- Télécharger un fichier.
+- Renommer un fichier.
+- Supprimer un fichier.
+- Uploader un fichier.
 
 ## Guide d'utilisation
+### Installation
+Le SDK .NET Core est la version Open Source et cross-platform de l'ancien framework .NET de Microsoft. 
+Ce SDK est requis pour pouvoir compiler et lancer le projet. Pour l'installer, il suffit de suivre le guide officiel d'installation afin d'obtenir `dotnet`, l'interface en ligne de commande. Lien à suivre : https://dotnet.microsoft.com/download?initial-os=linux.
+
+### Lancement des tests
+À la racine du projet, lancer la commande `dotnet test` afin de visualiser les tests réalisés.
+
 ### Exécution
-Lancer les commandes suivantes (à la racine du projet) :
-```mvn package```
-```java -jar target/CAR-TP01-1.0-SNAPSHOT.jar```
+Pour construire un build de déploiement du programme, utiliser la commande `dotnet publish` à la racine du projet.
 
-### Configurer le serveur FTP
-Configurer le serveur FTP en manipulant le fichier `config.properties` situé à la racine du projet.
+Ensuite, lancer le build créé en production avec la commande suivante :
+`dotnet ./WebApi/bin/Debug/netcoreapp2.0/WebApi.dll`.
 
-Champs de configurations possibles :
-- `portNumber` : Le numéro de port du serveur
-- `users` : Les utilisateurs disponibles dans le serveur
-- `passwords` : Les mots de passe des utilisateurs
-- `directories` : Les répertoires racine des utilisateurs
+### Configurer l'API REST de passerelle FTP
+L'API REST peut être configurée en remplissant le fichier `appsettings.json`.
+
+Il y a deux champs de configurations :
+- `"Host"` : L'adresse IP du serveur FTP dont l'API REST sera la passerelle.
+- `"Port"` : le numéro de port du serveur FTP pour communiquer.
 
 
 ## Architecture
+L'architecture de l'API REST a suivi les recommandations de base du modèle MVC enseignée dans la documentation officielle du framework ASP.NET Core 2.
+
+### Organisation des projets:
+Il y a deux grands projets dans l'application : 
+- **WebApi** : Un projet "ASP.NET Core Web API" qui gère l'implémentation de la passerelle REST.
+- **Tests** : un projet de tests Xunit pour rassembler les tests unitaires de l'application.
 
 
-### Organisation des packages :
-- **ftp** (package)
-	- AppConfig.java
-    - FtpCommand.java
-    - FtpCommunication.java
-    - FtpControlChannel.java
-    -  FtpDataChannel.java
-    -   FtpReply.java
-    -   Main.java
-    -   MockFtpDataChannel.java
-    -   package-info.java
-    -   SessionStore.java
+### Architecrue du projet "WebApi"
+- **WebApi.Controllers** (namespace)
+	- FilesController.cs
+	- DirectoriesController.cs
   
- - **ftp.controls** (package)
-	 -  FtpAuthControl.java
-	 -  FtpCdupControl.java
-	 -  FtpControl.java
-	 -  FtpControlFactory.java
-	 -  FtpCwdControl.java
-	 -  FtpDataControl.java
-	 -  FtpDeleControl.java
-	  - FtpListDataControl.java
-	 -  FtpMkdControl.java
-	 -  FtpPassControl.java
-	 - FtpPasvControl.java
-	 -  FtpPortControl.java
-	 -  FtpPwdControl.java
-	 -  FtpQuitControl.java
-	 -  FtpRetrDataControl.java
-	 - FtpRmdControl.java
-	 - FtpRnfrControl.java
-	  - FtpRntoControl.java
-	  - FtpStorDataControl.java
-	   - FtpSystControl.java
-	   - FtpTypeControl.java
-	  - FtpUnknownControl.java
-	  - FtpUserControl.java
-	   - package-info.java
+ - **WebApi.Ftp** (namespace) : *contient les services permettant l'interaction avec le serveur FTP distant.* 
+	 - IClient.cs (interface)
+	 - Client.cs
+ - **WebApi.Model** (namespace) : *contient les classes de Model qui font le lien entre le client et l'API REST.*
+	 - MoveInput.cs
+ - **WebApi.Tools** (namespace) : *Outils additionnels propres aux spécificités du framework ASP.NET Core pour simplifier certaines tâches redondantes/améliorer le rendu du serveur FTP.*
+	 - ErrorHandlingMiddleware.cs
+	 - FtpContext.cs
+	 - FtpCredentialExtension.cs
+	 - PassHeaderFilter.cs
+	 - UserHeaderFilter.cs
+ - **WebApi** (namespace) : *namespace de démarrage du serveur, c'est ici que l'élaboration des injections de dépendances, du chargement de la configuration et des middlewares est réalisée*
+	 - Startup.cs
+	 - Program.cs - *(classe Main par défaut dans un projet ASP.NET Core 2)* 
 
-#### Package "ftp"
-Le package **ftp** contient toutes les classes liées aux fonctionnalités internes du serveur FTP et qui permettent son bon fonctionnement qui n'est pas directement visible par l'utilisateur. Les fonctionnalités internes dont s'occupe ce package sont :
-- La configuration générale du serveur
-- Le démarrage du serveur
-- La connection à un client 
-- L'accès simultané pour plusieurs clients (multi-threading)
-- La réception des commandes FTP et l'envoie des réponses au client en utilisant la couche transport
-- La retenue d'informations sur le client au fil de son utilisation du service FTP
 
-#### Package "ftp.controls"
-Ce package contient des classes dont le but est de gérer chaque commande disponibles sur le serveur FTP. Ces classes sont des objets de contrôle qui implémenteront la logique pour chacune des commandes.
+## Code samples
+### Pattern : injection de dépendance
+Installation et mise à disposition automatique des services généraux de l'application pour les autres classes afin d'éviter la complexité de gérer les dépendances à la main. Les dépendances sont alors injectées grâce à un simple référencement dans le constructeur.
 
-### Design patterns utilisés
-- Pattern Strategy
-	- Le pattern strategy a été utilisé pour la gestion des objets de contrôles 
-- Control object
-- Pattern Factory :
-	- Le pattern Factory a été utilisé pour gérer 
-	- La factory en question est la classe `ftp.controls.FtpControlFactory`
-- Injection de dépendance + Singleton
-	- La classe `AppConfig` est un singleton indirect qui est injecté par dépendance aux classes s'occupant de la gestion des utilisateurs pour que celles-ci puissent connaître les configurations des utilisateurs du serveur.
-	- La classe `SessionStore` représente l'état d'une communication avec le client et les informations que le serveur retient pour ce client. Ce store est injecté par dépendance dans chaque classe qui a besoin des données.
-
-### Gestion d'erreur
-#### Gérer l'erreur du numéro de port déjà utilisé au démarrage du serveur
-```java
-try (ServerSocket server = new ServerSocket(appConfig.getPortNumber())) {
-			System.out.println("Creating thread pool...");
-
-			System.out.println("Waiting for clients...");
-			while (true) {
-				Socket client = server.accept();
-				System.out.println("Client connection received from " + client.getInetAddress().toString());
-				Runnable worker = new FtpCommunication(client, appConfig);
-				new Thread(worker).start();
-				System.out.println("Worker for client of ip (" + client.getInetAddress().getHostAddress() + ") ended.");
-			}
-		} catch (IOException e) {
-			System.err.println("Cannot start FTP server : port number already used.");
-		}
+```csharp
+// Startup.cs
+[...]
+public void ConfigureServices(IServiceCollection services)
+        {
+            services.AddScoped<FtpContext>();
+            // référencer le service IClient qui sera injecté via dépendance
+            services.AddScoped<IClient, Client>();
+	        [...]
 ```
 
-#### Gérer une erreur du réseau pendant la communication avec un client
-Sert à éviter que le serveur crashe si le client coupe brusquement la connexion, etc.
-```java
-try (BufferedWriter controlOut = new BufferedWriter(
-				new OutputStreamWriter(this.client.getOutputStream(), StandardCharsets.UTF_8));
-				BufferedReader controlIn = new BufferedReader(
-						new InputStreamReader(this.client.getInputStream(), StandardCharsets.UTF_8));) {
+```csharp
+// DirectoriesController.cs, classe utilisant le service IClient.
+	[...]
+    public class DirectoriesController : Controller
+    {
+        private readonly IClient _client;
 
-			FtpControlChannel controlChannel = new FtpControlChannel(controlOut, controlIn);
-			this.initControls(controlChannel);
-
-			System.out.println("Sending welcome message>");
-			this.sendWelcomeMessage(controlChannel);
-
-			[.......]
-
-			// closing the client.
-			this.client.close();
-		} catch (IOException ex) {
-			System.out.println(ex.getMessage());
-			System.out.println("Error while receiving command/sending reply. Connection abort.");
-		} catch (Exception ex) {
-			System.out.println(ex.getMessage());
-			System.out.println("Unknown error. Connection abort.");
-		}
+        public DirectoriesController(IClient client)
+        {
+            _client = client;
+        }
+        [...]
 ```
-#### Gérer les erreurs de transmissions de données lors de l'échange de données avec le data channel
-```java
-try (Socket socket = new Socket(this.store.getActiveAdr().getAddress(), this.store.getActiveAdr().getPort())) {
-			System.out.println("Writing IMAGE data through data channel with Image active mode.");
-			this.writeImageData(data, socket);
+	 
+### Modèle MVC
+Implémentation d'un modèle MVC classique pour la communication avec le client REST et le serveur FTP tout en respectant le principe de "Separation of concern".
 
-			this.sendOpeningReply();
-		} catch (IOException exception) {
-			System.err.println("Could not open connection data. Send error to the control channel.");
-			this.sendFailureReply();
-		}
-```
+### Middleware : sérialisation d'exception en erreur HTTP
+Morceau de code placé après l'exécution des controllers qui permet de récupérer une exception imprévue par l'application pour la formatter en une réponse HTTP valide.
 
-#### Gérer les erreurs du système de fichier (permission denied, file not found, etc) lors de la manipulation de l'arborescence de l'utilisateur
-```java
-try {
-			Path path = Paths.get(parentPath, toDeletePath);
-			if (!Files.exists(path)) {
-				return new FtpReply(5, 5, 0, "File not found.");
-			} else if (!Files.isDirectory(path)) {
-				return new FtpReply(5, 5, 0, "Destination is not a directory.");
-			} else {
-				Files.delete(path);
-				return new FtpReply(2, 5, 0, "File deleted successfully.");
-			}
-		} catch (SecurityException ex) {
-			return new FtpReply(5, 5, 0, "Permission denied");
-		} catch (InvalidPathException ex) {
-			return new FtpReply(5, 5, 0, "Syntax error : path not valid.");
-		} catch (DirectoryNotEmptyException ex) {
-			return new FtpReply(5, 5, 0, "Directory not empty.");
-		}
+```csharp
+// ErrorHandlingMiddleware.cs
+[...]
+private static Task HandleExceptionAsync(HttpContext context, Exception exception)
+        {
+	        // Définition du code d'erreur de l'exception attrapée.
+            HttpStatusCode code = HttpStatusCode.InternalServerError; // 500 if unexpected
+
+            bool isBadRequest = exception is FtpCommandException || exception is ArgumentOutOfRangeException ||
+                exception is FtpException || exception is InvalidDataException;
+
+            if (isBadRequest)
+            {
+                code = HttpStatusCode.BadRequest;
+            }
+
+			// renvoie du message d'erreur de l'exception sous JSON
+            string result = JsonConvert.SerializeObject(new { error = exception.Message });
+            context.Response.ContentType = "application/json";
+            context.Response.StatusCode = (int)code;
+            // envoi de la réponse d'erreur
+            return context.Response.WriteAsync(result);
+        }
+        [...]
 ```
 
+
+### État de l'application pour une requête unique
+Pour maintenir la norme stateless d'une architecture REST, une classe est créée  où est garantie l'instance unique au sein de la même requête. Cette classe contient des données telles que le mot de passe utilisé pour logger l'utilisateur FTP.
+
+```csharp
+// FtpContext.cs
+[...]
+public class FtpContext
+    {
+        public string User { get; set; }
+        public string Pass { get; set; }
+    }
+    [...]
+```
+```csharp
+// Startup.cs
+[...]
+services.AddScoped<FtpContext>(); // "AddScoped" force l'instance unique de FtpContext pour chaque requête à l'API.
+[...]
+```
+
+### Middleware : connexion d'un utilisateur à un serveur FTP
+Pour garantir le respect de la norme Stateless d'une API REST, un utilisateur doit fournir ses identifiants à chaque requête. Un middleware placé avant l'exécution des controllers permet de récupérer les identifiants d'un utilisateur placé en en-tête de la requête HTTP.
+
+```csharp
+[...]
+public async Task InvokeAsync(HttpContext context)
+        {
+            FtpContext ftpContext = context.RequestServices.GetService<FtpContext>();
+
+			// récupération du nom d'utilisateur
+            string userInput = context.Request.Headers["USER"].ToString() ?? "anonymous";
+			// récupération du mot de passe
+            string passInput = context.Request.Headers["PASS"].ToString() ?? "anonymous";
+
+			// connexion
+            ftpContext.User = userInput;
+            ftpContext.Pass = passInput;
+			
+			// passage à l'exécution des controllers
+            await _next(context);
+        }
+        [...]
+```
+
+## Gestion d'erreurs
+La spécificité de l'architecture et du framework ASP.NET Core 2 permet à l'application de tourner sans avoir besoin de prévoir de cas spécifiques pour la gestion d'erreur, ce qui facilite grandement l'élaboration du code.
+
+## Exemples de requêtes avec CURL
+- Lister le répertoire "/Conception" : 
+	- ***curl -X GET "http://localhost:57876/api/Directories/list?path=%2FConception" -H "accept: application/json" -H "USER: barchid" -H "PASS: lol"***
+
+- Télécharger le répertoire "/Conception" sous un zip nommé "Conception.zip" :
+	- ***curl -X GET "http://localhost:57876/api/Directories/download?path=%2FConception" -H "accept: application/json" -H "USER: barchid" -H "PASS: lol" -o "Conception.zip"***
+
+- Renommer un dossier "/Conception" en un dossier "/Conceptions" :
+	- ***curl -X PUT "http://localhost:57876/api/Directories" -H "accept: application/json" -H "USER: barchid" -H "PASS: lol" -H "Content-Type: application/json-patch+json" -d "{ \"oldPath\": \"/Conception\", \"targetPath\": \"/Conceptions\"}"***
+
+- Créer un dossier vide "/oui" :
+	- ***curl -X POST "http://localhost:57876/api/Directories?path=%2Foui" -H "accept: application/json" -H "USER: barchid" -H "PASS: lol"***
+
+- Supprimer un dossier "/oui" :
+	- ***curl -X DELETE "http://localhost:57876/api/Directories?path=%2Foui" -H "accept: application/json" -H "USER: barchid" -H "PASS: lol"***
+
+- Upload le dossier sous format zip "Conception.zip" à l'emplacement "/Conconception" :
+	- ***curl -X POST "http://localhost:57876/api/Directories/Upload?path=%2FConconception" -H "accept: application/json" -H "USER: barchid" -H "PASS: lol" -H "Content-Type: multipart/form-data" -F "archive=@lol.zip;type=application/x-zip-compressed"***
+
+- Télécharger un fichier "/license.txt" : 
+	- ***curl -X GET "http://localhost:57876/api/Files/download?path=%2Flicense.txt" -H "accept: application/json" -H "USER: barchid" -H "PASS: lol" -o "license.txt"***
+
+- Upload un fichier "/lilicense.txt" :
+	- ***curl -X POST "http://localhost:57876/api/Files?path=%2Flilicense.txt" -H "accept: application/json" -H "USER: barchid" -H "PASS: lol" -H "Content-Type: multipart/form-data" -F "file=@license.txt;type=text/plain"***
+
+- Renommer un fichier "/lilicense.txt" en un fichier "/lissansse.TéIxTé" :
+	- ***curl -X PUT "http://localhost:57876/api/Files" -H "accept: application/json" -H "USER: barchid" -H "PASS: lol" -H "Content-Type: application/json-patch+json" -d "{ \"oldPath\": \"/lilicense.txt\", \"targetPath\": \"/lissansse.TéIxTé\"}"***
+
+- Supprimer le fichier "/lissansse.TéIxTé" :
+	- ***curl -X DELETE "http://localhost:57876/api/Files?path=%2Flissansse.T%C3%A9IxT%C3%A9" -H "accept: application/json" -H "USER: barchid" -H "PASS: lol"***
+
+
+Une documentation de l'API en ligne est disponible lors du lancement du projet à la route suivante :
+**http://localhost:57876/swagger/index.html** (cette page simule des requêtes avec CURL directement).
+
+## Notes importantes :
+L'API REST implémentée a été pensée pour être 100% stateless, et par conséquent, le client REST doit fournir les identifiants de l'utilisateur FTP à chaque requête car le serveur ne conserve pas la connexion FTP entre deux requêtes.
+
+Une critique pouvant être faite est le manque d'optimalité de la solution puisque la passerelle REST doit se reconnecter à chaque requête. Cependant, comme mentionné dans les nombreux liens ci-dessous, une architecture REST se doit d'être stateless. C'est pourquoi le fait de garder une connexion entre deux requêtes reviendrait à ne pas implémenter une API REST. De ce fait, l'implémentation moins optimale a été gardée dans ce projet.
+
+ - Références :
+	 - https://fr.wikipedia.org/wiki/Representational_state_transfer
+	 - https://stackoverflow.com/questions/3105296/if-rest-applications-are-supposed-to-be-stateless-how-do-you-manage-sessions
+	 - https://restfulapi.net/statelessness/

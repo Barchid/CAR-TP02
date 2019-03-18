@@ -8,9 +8,8 @@ using System.IO;
 using System.Reflection;
 using WebApi.Ftp;
 using WebApi.Tools;
-using WebApi.Tools.Extensions;
 
-namespace CAR_TP02_Barchid
+namespace WebApi
 {
     /// <summary>
     /// Class used at the start of the program to define how the service will be running and with which configuration.

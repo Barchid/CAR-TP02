@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 
-namespace CAR_TP02_Barchid
+namespace WebApi
 {
     /// <summary>
     /// Main class that will run the application

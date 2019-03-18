@@ -5,7 +5,7 @@ using Microsoft.Extensions.Options;
 using System;
 using System.Threading.Tasks;
 
-namespace WebApi.Tools.Extensions
+namespace WebApi.Tools
 {
     /// <summary>
     /// Options of the credential

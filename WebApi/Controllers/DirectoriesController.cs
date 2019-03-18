@@ -66,7 +66,7 @@ namespace WebApi.Controllers
         /// <response code="500">Internal server error</response>
         /// <response code="400">When the request is not valid.</response>
         [HttpGet("download")]
-        [ProducesResponseType(typeof(File), 200)]
+        [ProducesResponseType(typeof(FileStreamResult), 200)]
         [ProducesResponseType(typeof(string), 400)]
         [ProducesResponseType(typeof(string), 500)]
         public IActionResult Download([FromQuery] string path)

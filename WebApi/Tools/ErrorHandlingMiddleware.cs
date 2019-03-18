@@ -5,7 +5,6 @@ using System;
 using System.IO;
 using System.Net;
 using System.Threading.Tasks;
-using WebApi.Exceptions;
 
 namespace WebApi.Tools
 {
@@ -43,10 +42,6 @@ namespace WebApi.Tools
             if (isBadRequest)
             {
                 code = HttpStatusCode.BadRequest;
-            }
-            else if (exception is HttpUnauthorizedException)
-            {
-                code = HttpStatusCode.Unauthorized;
             }
 
             string result = JsonConvert.SerializeObject(new { error = exception.Message });
